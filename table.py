@@ -2,13 +2,13 @@ import os
 import prettytable as pt
 
 
-class table:
-    def __init__(self, name, csvfile):
+class Table:
+    def __init__(self, name, csv_file):
         self.name = name
         self.fields = []
         self.data = []
-        if os.path.isfile(csvfile):
-            with open(csvfile, 'r', encoding="utf-8-sig") as f:
+        if os.path.isfile(csv_file):
+            with open(csv_file, 'r', encoding="utf-8-sig") as f:
                 for idx, line in enumerate(f):
                     line = line.rstrip("\n")
                     line = line.split(";")
@@ -38,3 +38,10 @@ class table:
             pretty.add_row(line)
 
         print(pretty)
+
+    def project(self, fields_list):
+        if type(fields_list)
+        for field in fields_list:
+
+
+    def delete_column(self, field):
