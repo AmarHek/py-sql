@@ -29,30 +29,47 @@ def convert_to_operator(op_string):
 class Table:
     # specify name and file from which to load the data
     # optional: specify delimiter used in the file, default is ';'
-    def __init__(self, name, csv_file, delimiter=';'):
+    def __init__(self, name: str, csv_file=None, delimiter=';', copy_table=None):
         self.name = name
         self.fields = []
         self.data = []
-        # check if file exists, raise error if not
-        if os.path.isfile(csv_file):
-            with open(csv_file, 'r', encoding="utf-8-sig") as f:
-                for idx, line in enumerate(f):
-                    # remove trailing new line and split by delimiter
-                    line = line.rstrip("\n")
-                    line = line.split(delimiter)
-                    # first line in file is treated as list of fields
-                    if idx == 0:
-                        self.fields = line
-                    else:
-                        self.data.append(line)
-        else:
-            raise FileNotFoundError
 
-        # convert all number strings to floats
-        for n_row, row in enumerate(self.data):
-            for n_column, elem in enumerate(row):
-                if is_number(elem):
-                    self.data[n_row][n_column] = float(elem)
+        # only load from csv if specified
+        if csv_file is not None:
+            # check if file exists, raise error if not
+            if os.path.isfile(csv_file):
+                with open(csv_file, 'r', encoding="utf-8-sig") as f:
+                    for idx, line in enumerate(f):
+                        # remove trailing new line and split by delimiter
+                        line = line.rstrip("\n")
+                        line = line.split(delimiter)
+                        # first line in file is treated as list of fields
+                        if idx == 0:
+                            self.fields = line
+                        else:
+                            self.data.append(line)
+            else:
+                raise FileNotFoundError
+
+            # convert all number strings to floats
+            for n_row, row in enumerate(self.data):
+                for n_column, elem in enumerate(row):
+                    if is_number(elem):
+                        self.data[n_row][n_column] = float(elem)
+
+        # if copy_table exists, create a copy of it
+        elif copy_table is not None:
+            self.name = copy_table.name
+            self.fields = copy_table.fields
+            self.data = copy_table.data
+
+        # otherwise the created table is empty, only a name is assigned
+
+    def set_fields(self, fields):
+        self.fields = fields
+
+    def set_data(self, data):
+        self.data = data
 
     def length(self):
         return len(self.fields)
@@ -117,5 +134,22 @@ class Table:
             for row in junk_data:
                 self.data.remove(row)
 
-    def join(self, field, table, other_field):
-        
+    def join(self, first_field, second_table, second_field):
+        index1 = self.index(first_field)
+        index2 = second_table.index(second_field)
+        joined = Table('joined')
+
+        # create joined fields
+        join_fields = []
+        for field in self.fields:
+            join_fields.append(field)
+        for field in second_table.fields:
+            # ignore second field since first_field is already in joined_fields
+            if field != second_field:
+                join_fields.append(field)
+        joined.set_fields(join_fields)
+
+        joined_data = []
+        for i in range(self.length()):
+                        
+
