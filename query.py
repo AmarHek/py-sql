@@ -26,8 +26,12 @@ class Query:
 
     def parse(self, cmd_query):
         # interpret command line string correctly and fill query attributes
-        # TODO: Add check for valid query syntax
         # generate list of fields to select from
+        cmd_query = cmd_query.replace('SELECT', 'Select').replace('select', 'Select')\
+            .replace('FROM', 'From').replace('from', 'From')\
+            .replace('WHERE', 'Where').replace('where', 'Where')\
+            .replace('AND', 'And').replace('and', 'And')
+
         select, rest = cmd_query.split(' From ')
         select = select.replace('Select ', '').split(', ')
 
@@ -37,8 +41,7 @@ class Query:
             from_ = from_.split(', ')
             where = where.split(' And ')
         else:
-            # blank space at the end of from must be removed first
-            from_ = rest[:-1].split(', ')
+            from_ = rest.split(', ')
             where = []
         # only fill condition lists if conditions are given in the query
         where_join = []
@@ -61,7 +64,8 @@ class Query:
         self.from_ = from_
         self.where = where
         self.where_join = where_join
-        self.sort_reorder_join()
+        if len(where_join) > 0:
+            self.sort_reorder_join()
         self.where_cond = where_cond
 
     def sort_reorder_join(self):
