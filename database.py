@@ -9,15 +9,21 @@ class Database:
         if name in self.tables.keys():
             print("Table '{}' already exists.".format(name))
         else:
-            table = tbl.Table(name, file)
+            table = tbl.Table(name)
+            table.load_from_csv(file)
             if not table.data:
                 print("No table created")
             else:
-                self.tables[name] = tbl.Table(name, file)
+                self.tables[name] = table
                 print("Added table '{}' from '{}' to the database".format(name, file))
 
     def delete_table(self, name):
+        # TODO: Check for need of deleting table object
         del self.tables[name]
+
+    # TODO: Add save
+    def save_database(self):
+        pass
 
     def show_table(self, name):
         if name in self.tables.keys():
@@ -47,17 +53,28 @@ class Database:
                 print("Error: One or more of the queried tables do not exist in your database")
                 return
 
-        # TODO: Join
+        # Create instance of query_table
+        query_table = tbl.Table('query')
 
         # tracker to see, which tables are contained in joined super table at the current time
-        tables_in_join = []
+        joined_tables = []
 
         # only do joins if where_join is not emtpy, otherwise make copy of queried table
         if not my_query.where_join:
-            query_table = tbl.Table(name='query', copy_table=self.tables[my_query.from_[0]])
+            query_table.copy(self.tables[my_query.from_[0]])
         else:
-            for join in my_query.where_join:
-                pass
+            for join_cond in my_query.where_join:
+                table1, field1, table2, field2 = join_cond
+                # make a copy of the very first join-table
+                if not joined_tables:
+                    query_table.copy(self.tables[table1])
+                # if the requested first field is not in our joined super table, then it most likely
+                # got prefixed with its table name from a previous loop
+                # in that case, add the table name as a prefix
+                if not query_table.is_valid_field(field1):
+                    field1 = table1 + '.' + field1
+                query_table = query_table.join(field1, self.tables[table2], field2)
+                joined_tables.extend([table1, table2])
 
         # filter rows that do not fit conditions
         for cond in my_query.where_cond:
@@ -75,12 +92,14 @@ class Database:
         select = my_query.select
         for idx, column in enumerate(select):
             table, field = column.split('.')
-            if not query_table.is_valid_field(column):
-                if not query_table.is_valid_field(field):
-                    print("Error: One or more field names in the query are invalid")
-                    return
-                else:
-                    select[idx] = field
+            # check if 'table.field' is valid. if not, check if just the field is valid
+            if query_table.is_valid_field(column):
+                select[idx] = column
+            elif query_table.is_valid_field(field):
+                select[idx] = field
+            else:
+                print("Error: One or more field names in the query are invalid")
+                return
         # reduce to only selected columns with adjusted selects-list
         query_table.project(select)
 

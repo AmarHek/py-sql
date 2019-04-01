@@ -1,6 +1,7 @@
 import os
 import prettytable as pt
 import operator
+import copy
 
 
 # auxiliary function to check if string can be converted to float
@@ -25,47 +26,41 @@ def convert_to_operator(op_string):
                      '!=': operator.ne}
     return operator_dict[op_string]
 
-# TODO: reorder, i.e. constructor makes empty table, load_csv loads from csv, make_copy copys from another table and
-#       join takes two tables to create one. Perhaps add prefix to all columns to make things easier
 
 class Table:
     # specify name and file from which to load the data
     # optional: specify delimiter used in the file, default is ';'
-    def __init__(self, name: str, csv_file=None, delimiter=';', copy_table=None):
+    def __init__(self, name: str):
         self.name = name
         self.fields = []
         self.data = []
 
+    def load_from_csv(self, csv_file, delimiter=';'):
         # only load from csv if specified
-        if csv_file is not None:
-            # check if file exists, raise error if not
-            if os.path.isfile(csv_file):
-                with open(csv_file, 'r', encoding="utf-8-sig") as f:
-                    for idx, line in enumerate(f):
-                        # remove trailing new line and split by delimiter
-                        line = line.rstrip("\n")
-                        line = line.split(delimiter)
-                        # first line in file is treated as list of fields
-                        if idx == 0:
-                            self.fields = line
-                        else:
-                            self.data.append(line)
-            else:
-                print("File not found")
-                return
+        if os.path.isfile(csv_file):
+            with open(csv_file, 'r', encoding="utf-8-sig") as f:
+                for idx, line in enumerate(f):
+                    # remove trailing new line and split by delimiter
+                    line = line.rstrip("\n")
+                    line = line.split(delimiter)
+                    # first line in file is treated as list of fields
+                    if idx == 0:
+                        self.fields = line
+                    else:
+                        self.data.append(line)
+        else:
+            print("File not found")
+            return
 
-            # convert all number strings to floats
-            for n_row, row in enumerate(self.data):
-                for n_column, elem in enumerate(row):
-                    if is_number(elem):
-                        self.data[n_row][n_column] = float(elem)
+        # convert all number strings to floats
+        for n_row, row in enumerate(self.data):
+            for n_column, elem in enumerate(row):
+                if is_number(elem):
+                    self.data[n_row][n_column] = float(elem)
 
-        # if copy_table exists, create a copy of it
-        elif copy_table is not None:
-            self.fields = copy_table.fields[:]
-            self.data = copy_table.data[:][:]
-
-        # otherwise the created table is empty, only a name is assigned
+    def copy(self, original_table):
+        self.fields = copy.deepcopy(original_table.fields)
+        self.data = copy.deepcopy(original_table.data)
 
     def set_fields(self, fields):
         self.fields = fields
@@ -142,8 +137,9 @@ class Table:
         junk_row_index = []
         for idx, row in enumerate(self.data):
             for idx2, row2 in enumerate(self.data):
-                if idx != idx2 and row == row2:
+                if idx < idx2 and row == row2 and idx2 not in junk_row_index:
                     junk_row_index.append(idx2)
+        junk_row_index.sort()
         for row_index in junk_row_index[::-1]:
             del self.data[row_index]
 
@@ -162,11 +158,11 @@ class Table:
             join_fields.append(field)
         for field in second_table.fields:
             # ignore second field since self_field is already in joined_fields
-            if field != second_field:
-                # if column names are duplicates, then add table name as prefix
-                if field in join_fields:
-                    field = second_table.name + '.' + field
-                join_fields.append(field)
+            # if field != second_field:
+            # if column names are duplicates, then add table name as prefix
+            if field in join_fields:
+                field = second_table.name + '.' + field
+            join_fields.append(field)
 
         # create column of first and second fields to make things easier below
         first_field_as_column = []
@@ -177,7 +173,7 @@ class Table:
             second_field_as_column.append(row[index2])
 
         # copy data from first table to temporary list
-        joined_data = self.data[:][:]
+        joined_data = copy.deepcopy(self.data)
 
         # loop through first_field_as_column (= rows of first table)
         for row, value in enumerate(first_field_as_column):
@@ -187,8 +183,8 @@ class Table:
                 # loop through the corresponding row of second table and append values to joined_data
                 for column, second_value in enumerate(second_table.data[second_table_row]):
                     # skip value of second_field
-                    if not column == index2:
-                        joined_data[row].append(second_value)
+                    # if not column == index2:
+                    joined_data[row].append(second_value)
             except ValueError:
                 print("No matching value found in second table")
 
