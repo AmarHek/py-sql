@@ -1,6 +1,3 @@
-import operator
-
-
 # auxiliary function to check if string can be converted to float
 def is_number(s):
     if '_' in s:

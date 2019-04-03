@@ -42,7 +42,7 @@ class MyCmd(Cmd):
     def do_select(self, query):
         db.perform_query(query)
 
-    def do_tables(self):
+    def do_tables(self, args):
         # lists the names of all tables in the database
         db.list_tables()
 

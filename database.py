@@ -1,6 +1,7 @@
 import table as tbl
 import query as qy
 
+
 class Database:
     def __init__(self):
         self.tables = {}
