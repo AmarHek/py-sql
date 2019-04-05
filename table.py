@@ -63,10 +63,10 @@ class Table:
         self.data = copy.deepcopy(original_table.data)
 
     def set_fields(self, fields):
-        self.fields = fields
+        self.fields = copy.deepcopy(fields)
 
     def set_data(self, data):
-        self.data = data
+        self.data = copy.deepcopy(data)
 
     def length(self):
         return len(self.fields)
@@ -135,6 +135,7 @@ class Table:
     def reduce(self):
         # make copy of data (needed for proper looping)
         junk_row_index = []
+        # TODO: efficiency! i in range(...)
         for idx, row in enumerate(self.data):
             for idx2, row2 in enumerate(self.data):
                 if idx < idx2 and row == row2 and idx2 not in junk_row_index:
