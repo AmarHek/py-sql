@@ -65,6 +65,7 @@ class Database:
             query_table.copy(self.tables[my_query.from_[0]])
         else:
             for join_cond in my_query.where_join:
+                # split up join_cond
                 table1, field1, table2, field2 = join_cond
                 # make a copy of the very first join-table
                 if not joined_tables:

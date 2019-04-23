@@ -28,14 +28,16 @@ def convert_to_operator(op_string):
 
 
 class Table:
-    # specify name and file from which to load the data
-    # optional: specify delimiter used in the file, default is ';'
+
     def __init__(self, name: str):
+        # create an empty Table object with only a name
         self.name = name
         self.fields = []
         self.data = []
 
     def load_from_csv(self, csv_file, delimiter=';'):
+        # specify name and file from which to load the data
+        # optional: specify delimiter used in the file, default is ';'
         # only load from csv if specified
         if os.path.isfile(csv_file):
             with open(csv_file, 'r', encoding="utf-8-sig") as f:
@@ -145,6 +147,9 @@ class Table:
             del self.data[row_index]
 
     def join(self, self_field, second_table, second_field):
+
+        # joins this table with a specified second table at the given fields and returns the joined super-table
+
         index1 = self.index(self_field)
         index2 = second_table.index(second_field)
         if index1 is None or index2 is None:
@@ -190,7 +195,7 @@ class Table:
                 print("No matching value found in second table")
 
         # set temporary lists to joined table object and return
-        joined.set_fields(join_fields)
-        joined.set_data(joined_data)
+        joined.fields = copy.deepcopy(join_fields)
+        joined.data = copy.deepcopy(joined_data)
 
         return joined

@@ -2,7 +2,7 @@ from cmd import Cmd
 import database
 
 
-class MyCmd(Cmd):
+class PySQL(Cmd):
 
     prompt = "> "
 
@@ -33,6 +33,7 @@ class MyCmd(Cmd):
             for table in tables:
                 db.show_table(table)
 
+    # Three select
     def do_Select(self, query):
         db.perform_query(query)
 
@@ -74,7 +75,7 @@ class MyCmd(Cmd):
 if __name__ == '__main__':
     db = database.Database()
 
-    app = MyCmd()
+    app = PySQL()
     app.cmdloop("New Database created. Enter a command to do something. "
                 "Enter help to see a list of commands with explanations.")
 
