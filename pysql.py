@@ -35,13 +35,14 @@ class PySQL(Cmd):
 
     # Three select
     def do_Select(self, query):
+        query = 'Select ' + query
         db.perform_query(query)
 
     def do_SELECT(self, query):
-        db.perform_query(query)
+        self.do_Select(query)
 
     def do_select(self, query):
-        db.perform_query(query)
+        self.do_Select(query)
 
     def do_tables(self, args):
         # lists the names of all tables in the database
