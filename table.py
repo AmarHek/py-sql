@@ -29,6 +29,9 @@ def convert_to_operator(op_string):
 
 
 class Table:
+    """
+    Test
+    """
 
     def __init__(self, name: str):
         # create an empty Table object with only a name
@@ -157,13 +160,9 @@ class Table:
         # create joined fields
         join_fields = []
 
+        # TODO: convention: name.field for all fields
         for field in self.fields:
-            join_fields.append(field)
-        for field in second_table.fields:
-            # if column names are duplicates, then add table name as prefix
-            if field in join_fields:
-                field = second_table.name + '.' + field
-            join_fields.append(field)
+            join_
 
         # create arrays (= columns) of first and second fields to make things easier below
         first_field_as_column = []

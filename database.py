@@ -3,8 +3,10 @@ import query as qy
 
 
 class Database:
+
     def __init__(self):
         self.tables = {}
+        self.query_table = tbl.Table('Query Table')
 
     def add_table(self, name, file):
         if name in self.tables.keys():
@@ -13,13 +15,14 @@ class Database:
             table = tbl.Table(name)
             table.load_from_csv(file)
             if not table.data:
-                print("No table created")
+                return
             else:
                 self.tables[name] = table
                 print("Added table '{}' from '{}' to the database".format(name, file))
 
-    def delete_table(self, name):
-        del self.tables[name]
+    def clear(self):
+        self.tables = {}
+        self.query_table = tbl.Table('Query Table')
 
     # TODO: Add save
     def save_database(self):
@@ -31,16 +34,14 @@ class Database:
 
     def list_tables(self):
         tables = list(self.tables.keys())
-        output = ''
         if not tables:
-            output = 'Database is empty'
+            print('Database is empty')
         else:
-            for idx, name in enumerate(tables):
-                if idx == 0:
-                    output += name
-                else:
-                    output += ', ' + name
-        print(output)
+            for name in tables:
+                print(name)
+
+    def check_query_syntax(self, query_string):
+        pass
 
     def perform_query(self, query_string):
         if not self.tables:
@@ -48,6 +49,7 @@ class Database:
             return
         # parse the query
         my_query = qy.Query()
+        # TODO: Check query syntax
         success = my_query.parse(query_string)
         # stop if something is wrong with the query
         if not success:

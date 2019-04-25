@@ -33,12 +33,8 @@ class Query:
     def parse(self, cmd_query):
         # interpret command line string correctly and fill query attributes
         # generate list of fields to select from
-        # All caps, all lowercase and only first uppercase are valid syntax
-        # , but all caps and lowercase are converted first
-        cmd_query = cmd_query.replace('SELECT', 'Select').replace('select', 'Select')\
-            .replace('FROM', 'From').replace('from', 'From')\
-            .replace('WHERE', 'Where').replace('where', 'Where')\
-            .replace('AND', 'And').replace('and', 'And')
+
+        # TODO: Syntax checks auf database auslagern
 
         # Check if at least one where-condition is given
         iswhere = False
@@ -47,7 +43,7 @@ class Query:
                 iswhere = True
 
         # syntax check and abort if something is wrong
-        if 'Select' not in cmd_query or 'From' not in cmd_query or (iswhere and 'Where' not in cmd_query):
+        if 'SELECT' not in cmd_query or 'FROM' not in cmd_query or (iswhere and 'WHERE' not in cmd_query):
             print("Syntax error in query, stopping query")
             return False
 
@@ -139,9 +135,7 @@ class Query:
                 else:
                     print('The given conditions create more than one query-table, stopping query')
                     return False
-        if len(rest) != 0:
-            print('Unsorted join conditions left, something went wrong, stopping query')
-            return False
         self.where_join = join_list
+        return True
 
 

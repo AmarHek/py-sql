@@ -1,6 +1,8 @@
 from cmd import Cmd
 import database
 
+# TODO: Document classes (what they do etc.)
+# TODO: Write out non-simple statements (split, enumerate, dicts, etc.)
 
 class PySQL(Cmd):
 
@@ -8,21 +10,17 @@ class PySQL(Cmd):
 
     def do_add(self, args):
         # adds the specified tables and files to the database
-        tables = args.split(', ')
-        for table in tables:
-            nameandfile = table.split(' ')
-            if len(nameandfile) == 2:
-                name, file = nameandfile
-                db.add_table(name, file)
-            else:
-                print("Wrong syntax, failed creating table")
+        files = args.split(',')
+        files = [file.strip(' ') for file in files]
+        for file in files:
+            # TODO: Add automatic name extraction from path
+            # works only if file in same directory as of now
+            name = file.strip('.csv')
+            db.add_table(name, file)
 
-    def do_del(self, args):
-        # delete the specified tables, separated by commas
-        tables = args.split(', ')
-        for table in tables:
-            db.delete_table(table)
-            print("Deleted table '{}' from the database".format(table))
+    def do_clear(self, args):
+        # clears all loaded tables
+        db.clear()
 
     def do_show(self, args):
         if args == '':
@@ -33,16 +31,9 @@ class PySQL(Cmd):
             for table in tables:
                 db.show_table(table)
 
-    # Three select
-    def do_Select(self, query):
-        query = 'Select ' + query
-        db.perform_query(query)
-
     def do_SELECT(self, query):
-        self.do_Select(query)
-
-    def do_select(self, query):
-        self.do_Select(query)
+        query = 'SELECT ' + query
+        db.perform_query(query)
 
     def do_tables(self, args):
         # lists the names of all tables in the database
