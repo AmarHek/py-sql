@@ -102,6 +102,7 @@ class Database:
             self.query_table.select(cond)
         # first adjust field names in select-list to field names in table like before
         select = my_query.select
+        # TODO: Add check for join select or regular select
         for idx, column in enumerate(select):
             table, field = column.split('.')
             # check if 'table.field' is valid. if not, check if just the field is valid
