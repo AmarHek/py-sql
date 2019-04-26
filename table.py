@@ -4,8 +4,8 @@ import operator
 import copy
 
 
-# auxiliary function to check if string can be converted to float
 def is_number(s):
+    """checks if a string can be converted to float"""
     if '_' in s:
         return False
     else:
@@ -18,6 +18,15 @@ def is_number(s):
 
 # TODO: Add 'In' functionality
 def convert_to_operator(op_string):
+    """
+    Converts a string to an operator
+
+    Args:
+        op_string: operator to be converted
+
+    Returns:
+        operator: the corresponding operator object
+    """
     operator_dict = {'>': operator.gt,
                      '<': operator.lt,
                      '>=': operator.ge,
@@ -28,26 +37,90 @@ def convert_to_operator(op_string):
     return operator_dict[op_string]
 
 
-class Table:
+def join(table1, field1, table2, field2):
     """
-    Test
+    joins two table objects
+
+    Args:
+        table1 (Table): first table to be joined
+        field1 (str): field of the first table at which to join
+        table2 (Table): second table to be joined
+        field2 (str): field of the second table at which to join
+
+    Returns:
+        joined (Table): the joined super-table
     """
 
-    def __init__(self, name: str):
-        # create an empty Table object with only a name
+    # joins this table with a specified second table at the given fields and returns the joined super-table
+    # extract indexes of given fields
+    index1 = table1.index(field1)
+    index2 = table2.index(field2)
+    # create empty table for joining
+    joined = Table('joined')
+    # copy fields of table1, but only add prefixes if fields of table1 do not have them, i.e. no '.' present
+    if '.' not in table1.fields:
+        for field in table1.fields:
+            joined.fields.append(table1.name + '.' + field)
+    else:
+        joined.fields = copy.deepcopy(table1.fields)
+    for field in table2.fields:
+        joined.fields.append(table2.name + '.' + field)
+    # create arrays (= columns) of first and second fields to make things easier below
+    first_field_as_column = []
+    for row in table1.data:
+        first_field_as_column.append(row[index1])
+    second_field_as_column = []
+    for row in table2.data:
+        second_field_as_column.append(row[index2])
+    # copy data from first table to temporary list
+    joined.data = copy.deepcopy(table1.data)
+    # loop through first_field_as_column (= rows of first table)
+    for row, value in enumerate(first_field_as_column):
+        # if value is not in second table, add blank spaces as values
+        if value not in second_field_as_column:
+            joined.data[row].append([''] * table2.length())
+        else:
+            # check, where value is the same as in second_field_as_column (= corresponding row in second_table)
+            second_table_row = second_field_as_column.index(value)
+            # loop through the corresponding row of second table and append values to joined_data
+            for column, second_value in enumerate(table2.data[second_table_row]):
+                joined.data[row].append(second_value)
+    return joined
+
+
+class Table:
+    """creates a simple table and offers some functions for table handling
+
+    Args:
+        name (str): the name of the table
+
+    Attributes:
+        name (str): the name of the table
+        fields (list): a list of all field names of the table, the name of the columns
+        data (list): contains all data of the table
+                     Each entry is a row of the table, represented by a list
+                     order is the same as in fields
+    """
+
+    def __init__(self, name):
         self.name = name
         self.fields = []
         self.data = []
 
     def load_from_csv(self, csv_file, delimiter=';'):
-        # specify name and file from which to load the data
-        # optional: specify delimiter used in the file, default is ';'
-        # only load from csv if specified
+        """
+        loads fields and data from a csv-file into a table object
+
+        Args:
+            csv_file (str): the path to the file
+            delimiter (str): the symbol used to divide each entry on the csv-file, ';' by default
+
+        """
         if os.path.isfile(csv_file):
             with open(csv_file, 'r', encoding="utf-8-sig") as f:
                 for idx, line in enumerate(f):
-                    # remove trailing new line and split by delimiter
-                    line = line.rstrip("\n")
+                    # remove trailing new line, split by delimiter and set to lowercase
+                    line = line.rstrip("\n").lower()
                     line = line.split(delimiter)
                     # first line in file is treated as list of fields
                     if idx == 0:
@@ -64,17 +137,32 @@ class Table:
                 if is_number(entry):
                     self.data[i][j] = float(entry)
 
-    # copies the contents of one table to another
     def copy(self, original_table):
+        """
+        copies the fields and data of an existing table into this one
+
+        Args:
+            original_table (Table): the table to copy from
+
+        """
         self.fields = copy.deepcopy(original_table.fields)
         self.data = copy.deepcopy(original_table.data)
 
-    # returns the number of columns of the table
     def length(self):
+        """returns the number of table columns"""
         return len(self.fields)
 
     # returns the index of a field
     def index(self, field_name):
+        """
+        returns the column number of the given field_name
+
+        Args:
+            field_name (str): name of the required field
+
+        Returns:
+
+        """
         if self.is_valid_field(field_name):
             index = self.fields.index(field_name)
             return index
@@ -84,10 +172,12 @@ class Table:
 
     # check if a given field name exists in the table
     def is_valid_field(self, field):
+        """checks if a table has a given field"""
         return field in self.fields
 
     # plot the table in terminal
     def present(self):
+        """prints the table"""
         pretty = pt.PrettyTable()
         pretty.field_names = self.fields
         for line in self.data:
@@ -96,11 +186,12 @@ class Table:
 
     # delete all columns of a table specified in fields_list
     def project(self, fields_list):
-        # check if all entered fields are valid
-        for field in fields_list:
-            if not self.is_valid_field(field):
-                print("One or more of the selected fields are invalid")
-                return
+        """
+        selects the specified columns of a table and deletes the others, directly alters the table
+
+        Args:
+            fields_list (list): all fields that should not be removed
+        """
         # make list of all fields that need to be removed
         to_delete = []
         for field in self.fields:
@@ -112,6 +203,10 @@ class Table:
 
     # delete single column of table
     def delete_column(self, field):
+        """deletes a column from a table
+        Args:
+            field (str): name of the column to be deleted
+        """
         idx = self.index(field)
         for row in self.data:
             del row[idx]
@@ -119,21 +214,25 @@ class Table:
 
     # deletes all rows from data that do not match condition
     def select(self, cond):
+        """
+        removes all rows of a table that do not fit the condition
+        Args:
+            cond (list): condition from which to select rows - a list with three entries: [field, operator, value]
+        """
         field = cond[0]
         op = convert_to_operator(cond[1])
         value = cond[2]
         junk_rows = []
-        if not self.is_valid_field(field):
-            print("Warning: Table does not have the field '{}'").format(field)
-        else:
-            column = self.index(field)
-            for idx, row in enumerate(self.data):
-                if not op(row[column], value):
-                    junk_rows.append(row)
-            for row in junk_rows:
-                self.data.remove(row)
+        column = self.index(field)
+        for idx, row in enumerate(self.data):
+            if not op(row[column], value):
+                junk_rows.append(row)
+        for row in junk_rows:
+            self.data.remove(row)
 
     def reduce(self):
+        """deletes all duplicate rows in a table"""
+
         # make copy of data (needed for proper looping)
         junk_row_index = []
         # loop twice through the data to compare each row to the rest
@@ -146,49 +245,3 @@ class Table:
         # running backwards to avoid index confusion
         for row_index in junk_row_index[::-1]:
             del self.data[row_index]
-
-    def join(self, self_field, second_table, second_field):
-        # joins this table with a specified second table at the given fields and returns the joined super-table
-        # extract indexes of given fields
-        index1 = self.index(self_field)
-        index2 = second_table.index(second_field)
-        if index1 is None or index2 is None:
-            return None
-
-        # create empty table for joining
-        joined = Table('joined')
-        # create joined fields
-        join_fields = []
-
-        # TODO: convention: name.field for all fields
-        for field in self.fields:
-            join_
-
-        # create arrays (= columns) of first and second fields to make things easier below
-        first_field_as_column = []
-        for row in self.data:
-            first_field_as_column.append(row[index1])
-        second_field_as_column = []
-        for row in second_table.data:
-            second_field_as_column.append(row[index2])
-
-        # copy data from first table to temporary list
-        joined_data = copy.deepcopy(self.data)
-
-        # loop through first_field_as_column (= rows of first table)
-        for row, value in enumerate(first_field_as_column):
-            # if value is not in second table, add blank spaces as values
-            if value not in second_field_as_column:
-                joined_data[row].append([' ']*len(second_table.length()))
-            else:
-                # check, where value is the same as in second_field_as_column (= corresponding row in second_table)
-                second_table_row = second_field_as_column.index(value)
-                # loop through the corresponding row of second table and append values to joined_data
-                for column, second_value in enumerate(second_table.data[second_table_row]):
-                    joined_data[row].append(second_value)
-
-        # set temporary lists to joined table object and return
-        joined.fields = copy.deepcopy(join_fields)
-        joined.data = copy.deepcopy(joined_data)
-
-        return joined

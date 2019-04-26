@@ -1,16 +1,15 @@
-# auxiliary function to check if string can be converted to float
-def is_number(s):
-    if '_' in s:
-        return False
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+from database import *
+from table import is_number
 
 
-# splits a string with the splitter and removes spaces
 def split_and_strip(expr, splitter):
+    """splits a string with the given splitter and removes blank spaces in front or end of the elements
+    Args:
+        expr (str): expression to be split
+        splitter (str): character at which to split expr into a list
+    Returns:
+        expr (list): the initial expression divided into a list
+    """
     expr = expr.split(splitter)
     expr = [a.strip(' ') for a in expr]
     return expr
@@ -19,53 +18,57 @@ def split_and_strip(expr, splitter):
 
 
 class Query:
+    """
+    a class designed to parse an input query into several lists to create the queried table in later operations
+
+    Attributes:
+
+        select: list of fields to be selected in format table.field
+        from_: list of tables from which to select
+        where_join: list of join conditions
+        where_cond: list of all remaining conditions
+    """
 
     operators = ['=', '<', '>', '<=', '>=', '<>', '!=']
 
     def __init__(self):
-        # generate an empty instance of a query
+        """generates an empty instance of a query"""
         self.select = []
         self.from_ = []
-        self.where = []
         self.where_join = []
         self.where_cond = []
 
     def parse(self, cmd_query):
-        # interpret command line string correctly and fill query attributes
-        # generate list of fields to select from
+        """
+        parses a query string from the command line and fills out the attributes of the Query object
 
-        # TODO: Syntax checks auf database auslagern
+        Args:
+            cmd_query (str): an SQL-query of the form SELECT ... FROM ... WHERE ...
 
-        # Check if at least one where-condition is given
-        iswhere = False
-        for operator in self.operators:
-            if operator in cmd_query:
-                iswhere = True
+        Returns:
+            bool: False if the query fails due to an error
+        """
 
-        # syntax check and abort if something is wrong
-        if 'SELECT' not in cmd_query or 'FROM' not in cmd_query or (iswhere and 'WHERE' not in cmd_query):
-            print("Syntax error in query, stopping query")
+        # convert all to lowercase first
+        cmd_query = cmd_query.lower()
+
+        # check query syntax
+        if not self.check_query_syntax(cmd_query):
             return False
 
         # Select is removed from the string and split into two halves at 'From'
-        select, rest = cmd_query.split('From')
-        select = split_and_strip(select, 'Select')
-        # check if every element of select has the format 'table.field'
-        if sum(['.' not in sel for sel in select]) > 0:
-            print("One or more selects are not of the format 'table.field', stopping query")
-            return False
+        select, rest = cmd_query.split('from')
+        select = split_and_strip(select, 'select')
 
         # Fill out from and fill where if conditions are given
-        if iswhere:
-            from_, where = rest.split('Where')
+        if 'where' in rest:
+            from_, where = rest.split('where')
             from_ = split_and_strip(from_, ',')
-            where = split_and_strip(where, 'And')
+            where = split_and_strip(where, 'and')
         else:
             from_ = split_and_strip(rest, ',')
             where = []
 
-        where_join = []
-        where_cond = []
         # only fill condition lists if conditions are given in the query
         if len(where) > 0:
             for cond in where:
@@ -77,32 +80,77 @@ class Query:
                 cond = split_and_strip(cond, operator)
                 # join condition if first and last argument contain '.' (table.field) and if operator is '='
                 if ('.' in cond[0]) and ('.' in cond[2]) and (operator == '='):
-                    where_join.append(cond[0].split('.') + cond[1].split('.'))
+                    self.where_join.append(cond[0].split('.') + cond[1].split('.'))
                 # otherwise is regular condition and split into table.column, operator and value
                 else:
                     # check if value for comparison is float and convert
                     if is_number(cond[1]):
                         cond[1] = float(cond[1])
-                    where_cond.append([cond[0], operator, cond[1]])
+                    self.where_cond.append([cond[0], operator, cond[1]])
 
-        # finally assign temporary variables to query attributes
+        # assign temporaries to attributes
         self.select = select
         self.from_ = from_
-        self.where = where
-        self.where_join = where_join
+
         # reorder join conditions
-        if len(where_join) > 0:
+        if len(self.where_join) > 0:
             success = self.sort_reorder_join()
             # if something went from during reordering, abort query
             if not success:
                 return False
-        self.where_cond = where_cond
         return True
 
+    def check_query_syntax(self, query_string):
+        """
+        function to check the query syntax and if all requested tables and fields exist
+
+        Args:
+            query_string: the query in question
+
+        Returns:
+            bool: False (+ prints error messages) if something went wrong, True if everything is fine
+        """
+
+        # Check if at least one where-condition is given
+        is_where = False
+        for operator in self.operators:
+            if operator in query_string:
+                is_where = True
+
+        # syntax check and abort if something is wrong
+        if 'select' not in query_string or 'from' not in query_string or (is_where and 'where' not in query_string):
+            print("Syntax error in query, stopping query")
+            return False
+
+        select, _ = query_string.split('from')
+
+        # check if every element of select has the format 'table.field'
+        if sum(['.' not in sel for sel in select]) > 0:
+            print("One or more selects are not of the format 'table.field', stopping query")
+            return False
+        # check if every field and table exist
+        for sel in select:
+            name, field = sel.split('.')
+            if name not in Database.tables.keys():
+                print("Table '{}' does not exist").format(name)
+                return False
+            elif not Database.tables[name].is_valid_field(field):
+                print("Table '{}' does not have the field '{}").format(name, field)
+                return False
+            else:
+                return True
+
     def sort_reorder_join(self):
+        """reorders the conditions in self.where_join so that the tables are joined in a set order"""
 
         def reorder_join_element(table_order, join_element):
-            # reorders a join-condition-list to fit the given table order
+            """
+            reorders a join-condition-list to fit the given table order
+
+            Args:
+                table_order (list): hierarchy of the tables
+                join_element (list): a single, unordered join condition
+            """
             index1 = table_order.index(join_element[0])
             index2 = table_order.index(join_element[2])
             if index1 < index2:
