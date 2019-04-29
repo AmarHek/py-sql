@@ -1,7 +1,6 @@
 import unittest
 from database import *
 import table as tbl
-import os
 
 
 class DatabaseTest(unittest.TestCase):

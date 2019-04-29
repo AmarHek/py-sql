@@ -33,6 +33,9 @@ class QueryTest(unittest.TestCase):
         myquery = Query()
         query = "select table1, table2.field2 from table1, table2"
         self.assertEqual(myquery.build_syntax(query), False)
+        query = "select table1.field1, table2.field2 from table1, table2" \
+                "where table1 = 300"
+        self.assertEqual(myquery.build_syntax(query), False)
         query = "select table1.field1, table2.field2 from table1, table2 where table1.field1 < jung"
         self.assertEqual(myquery.build_syntax(query), False)
         query = "select table1.field1, table2.field2 " \
@@ -41,7 +44,10 @@ class QueryTest(unittest.TestCase):
                 "and table1.field1 = z6" \
                 "and table2.field2 < 10"
         self.assertEqual(myquery.build_syntax(query), True)
-        self.assertListEqual(myquery.select, ['table1.field1'])
+        self.assertListEqual(myquery.select, ['table1.field1', 'table2.field2'])
+        self.assertListEqual(myquery.from_, ['table1', 'table2'])
+        self.assertListEqual(myquery.where_cond, [['table1.field1', '=', 'z6'], ['table2.field2', '<', 10]])
+        self.assertListEqual(myquery.where_join, [['table1', 'field1', 'table2', 'field2']])
 
     def testCheckDatabase(self):
         myquery = Query()
@@ -63,12 +69,16 @@ class QueryTest(unittest.TestCase):
 
     def testParse(self):
         myquery = Query()
-        query = "select table1.field1, table2.field2 " \
-                "from table1, table2 " \
-                "where table1.field1 = table2.field2" \
-                "and table1.field1 > 20"
-        myquery.parse(query)
+        data = db.Database()
+        data.add_table('raum', 'raum.csv')
+        data.add_table('belegung', 'belegung.csv')
+        query = "select raum.kuerzel, belegung.kuerzel " \
+                "from raum, belegung " \
+                "where raum.kuerzel = belegung.raum" \
+                "and raum.groesse > 300"
+        self.assertEqual(myquery.parse(query, data.tables), True)
 
 
 if __name__ == "__main__":
     unittest.main()
+

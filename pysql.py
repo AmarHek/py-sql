@@ -16,7 +16,7 @@ class PySQL(Cmd):
         for file in files:
             # TODO: Add automatic name extraction from path
             # works only if file in same directory as of now
-            name = file.strip('.csv').lower()
+            name = file.replace('.csv', '').lower()
             db.add_table(name, file)
 
     def do_clear(self, args):
