@@ -1,0 +1,34 @@
+Eventuell unbekannter Python-Code:
+Code wird durch *Sternchen* markiert
+Ausgaben durch '> '
+
+- Dictionary
+	- Initiiert durch geschweifte Klammern, z.B. *dictionary = {}*
+	- Eindeutige Zuweisung von Keys/Schlüsseln auf Values/Werte
+	- Jeder Schlüssel weist auf einen Wert, aber ein Wert kann mehrere Schlüssel haben.
+	- Zuweisung neuer Werte über *dictionary[Key] = Wert*
+	- Abfrage eines Wertes auf Referenz a: *a = dictionary[Key]*
+	
+- String.strip(character)
+	- Methode des String-Datentyps
+	- Erlaubt, unerwünschte character am Anfang und Ende eines Strings zu entfernen
+	- .strip() ohne Argumente entfernt Leerzeichen
+	- z.B. *wort = ",,,Ein Wort,,,"*
+		   *print(wort.strip(','))*
+		   > Ein Wort
+		   
+- String.split(delimiter)
+	- Teilt einen String in mehrere kleinere Strings auf, wobei der delimiter das Zeichen bzw. die Zeichenfolge
+	  definiert, an der getrennt werden soll.
+	- Ausgabe ist eine Liste, wobei die Elemente der Liste die kürzeren Teil-Strings sind
+	- delimiter wird dabei entfernt
+	- Beispiel: *satz = "Heute ist ein schöner Tag"*
+				*liste = satz.split(' ')*
+				*print(liste)*
+				> ['Heute', 'ist', 'ein', 'schöner', 'Tag']
+	
+- List Comprehension
+	- Erlaubt das erstellen einer Liste aus einer Schleife in nur einer Zeile
+	- Beispiel: Es existiert die Liste "Woerter" mit mehreren Strings und man möchte unerwünschte Leerzeichen
+				am Anfang und am Ende der Elemente entfernen
+				*woerter_bereinigt = [wort.strip() for wort in woerter]*

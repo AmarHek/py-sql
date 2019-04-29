@@ -28,7 +28,7 @@ class PySQL(Cmd):
         if args == '':
             pass
         else:
-            tables = args.split(', ')
+            tables = args.lower().split(', ')
             for table in tables:
                 db.show_table(table)
 

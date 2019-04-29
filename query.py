@@ -1,4 +1,3 @@
-from database import *
 from table import is_number
 
 
@@ -38,12 +37,13 @@ class Query:
         self.where_join = []
         self.where_cond = []
 
-    def parse(self, query_string):
+    def parse(self, query_string, tables):
         """
         parses a query string from the command line and fills out the attributes of the Query object
 
         Args:
             query_string (str): an SQL-query of the form SELECT ... FROM ... WHERE ...
+            tables (Dict): Dictionary/database of tables to assert table names and fields
 
         Returns:
             bool: False if the query fails due to an error
@@ -93,7 +93,7 @@ class Query:
         self.select = select
         self.from_ = from_
 
-        if not self.check_database():
+        if not self.check_database(tables):
             return False
 
         # reorder join conditions
@@ -131,7 +131,7 @@ class Query:
             select = split_and_strip(select, ',')
             # check if every select is of form table.field
             for sel in select:
-                if len(sel.split('.') != 2):
+                if len(sel.split('.')) != 2:
                     print('Syntax error in SELECT, stopping query')
                     return False
             if is_where:
@@ -149,12 +149,12 @@ class Query:
                     else:
                         # check if the left-side of a condition is of form table.field
                         left = cond.split(operator)[0]
-                        if len(left.split('.') != 2):
+                        if len(left.split('.')) != 2:
                             print('Syntax error in conditions, stopping query')
                             return False
         return True
 
-    def check_database(self):
+    def check_database(self, tables):
         """
         Function to check if every field and table in the query exists
 
@@ -162,47 +162,47 @@ class Query:
             bool: False (+ prints error messages) if something is wrong, True otherwise
         """
 
+        # check if every table in from_ exists:
+        for name in self.from_:
+            if name not in tables.keys():
+                print("Table '{}' does not exist.".format(name))
+                return False
+
         # check if every field and table in select exist
         for sel in self.select:
             name, field = sel.split('.')
-            if name not in Database.tables.keys():
-                print("Table '{}' does not exist.").format(name)
+            if name not in self.from_:
+                print("Table '{}' found in select, but not in from.".format(name))
                 return False
-            elif not Database.tables[name].is_valid_field(field):
-                print("Table '{}' does not have the field '{}'.").format(name, field)
-                return False
-
-        # check if every table in from_ exists:
-        for name in self.from_:
-            if name not in Database.tables.keys():
-                print("Table '{}' does not exist.").format(name)
+            elif not tables[name].is_valid_field(field):
+                print("Table '{}' does not have the field '{}'.".format(name, field))
                 return False
 
         # check the regular conditions
         if len(self.where_cond) > 0:
             for cond in self.where_cond:
                 name, field = cond[0].split('.')
-                if name not in Database.tables.keys():
-                    print("Table '{}' does not exist.").format(name)
+                if name not in tables.keys():
+                    print("Table '{}' does not exist.".format(name))
                     return False
-                elif not Database.tables[name].is_valid_field(field):
-                    print("Table '{}' does not have the field '{}'.").format(name, field)
+                elif not tables[name].is_valid_field(field):
+                    print("Table '{}' does not have the field '{}'.".format(name, field))
                     return False
 
         # check the join conditions
         if len(self.where_join) > 0:
-            for cond in self.where_cond:
-                if cond[0] not in Database.tables.keys():
-                    print("Table '{}' does not exist.").format(cond[0])
+            for cond in self.where_join:
+                if cond[0] not in self.from_:
+                    print("Table '{}' found in conditions, but not in from.".format(cond[0]))
                     return False
-                elif cond[2] not in Database.tables.keys():
-                    print("Table '{}' does not exist.").format(cond[2])
+                elif cond[2] not in self.from_:
+                    print("Table '{}' found in conditions, but not in from.".format(cond[2]))
                     return False
-                elif not Database.tables[cond[0]].is_valid_field(cond[1]):
-                    print("Table '{}' does not have the field '{}'.").format(cond[0], cond[1])
+                elif not tables[cond[0]].is_valid_field(cond[1]):
+                    print("Table '{}' does not have the field '{}'.".format(cond[0], cond[1]))
                     return False
-                elif not Database.tables[cond[2]].is_valid_field(cond[3]):
-                    print("Table '{}' does not have the field '{}'.").format(cond[2], cond[3])
+                elif not tables[cond[2]].is_valid_field(cond[3]):
+                    print("Table '{}' does not have the field '{}'.".format(cond[2], cond[3]))
                     return False
         return True
 

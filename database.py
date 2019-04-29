@@ -4,14 +4,14 @@ import query as qy
 
 class Database:
     """
-    module to manage several tables
+    class to manage a database of tables
     Attributes:
         tables: dictionary with table names as keys and Table objects as values
         query_table: variable to save the most recent queried table
     """
 
     tables = {}
-    query_table = tbl.Table('Query Table')
+    query_table = tbl.Table('query_table')
 
     def add_table(self, name: str, file: str):
         """adds a new table to the database
@@ -76,7 +76,7 @@ class Database:
             return
         # parse the query
         my_query = qy.Query()
-        success = my_query.parse(query_string)
+        success = my_query.parse(query_string, self.tables)
         # stop if something is wrong with the query
         if not success:
             return
@@ -97,8 +97,9 @@ class Database:
                 table1, field1, table2, field2 = join_cond
                 # perform the first join
                 if my_query.where_join.index(join_cond) == 0:
-                    self.query_table.copy(self.tables[table1])
-                self.query_table = tbl.join(self.query_table, table1+'.'+field1, self.tables[table2], field2)
+                    self.query_table.copy(tbl.join(self.tables[table1], field1, self.tables[table2], field2))
+                else:
+                    self.query_table.copy(tbl.join(self.query_table, table1+'.'+field1, self.tables[table2], field2))
             select = my_query.select
 
         # remove rows that do not fit the given conditions

@@ -58,7 +58,7 @@ def join(table1, field1, table2, field2):
     # create empty table for joining
     joined = Table('joined')
     # copy fields of table1, but only add prefixes if fields of table1 do not have them, i.e. no '.' present
-    if '.' not in table1.fields:
+    if '.' not in table1.fields[0]:
         for field in table1.fields:
             joined.fields.append(table1.name + '.' + field)
     else:
@@ -154,21 +154,13 @@ class Table:
 
     # returns the index of a field
     def index(self, field_name):
-        """
-        returns the column number of the given field_name
-
+        """ returns the column number of the given field_name
         Args:
             field_name (str): name of the required field
-
-        Returns:
-
         """
         if self.is_valid_field(field_name):
             index = self.fields.index(field_name)
             return index
-        else:
-            print("Table '{}' does not have a field named '{}'").format(self.name, field_name)
-            return None
 
     # check if a given field name exists in the table
     def is_valid_field(self, field):
