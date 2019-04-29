@@ -31,7 +31,7 @@ class Database:
             if not table.data:
                 return
             else:
-                tables[name] = table
+                self.tables[name] = table
                 print("Added table '{}' from '{}' to the database".format(name, file))
 
     def clear(self):
@@ -84,34 +84,30 @@ class Database:
         # if there are no conditions in where_join, just make a copy of the table in my_query.from_
         if not my_query.where_join:
             self.query_table.copy(self.tables[my_query.from_[0]])
+            # since we only select from a pure table, all field names must be un-prefixed
+            select = my_query.select
+            # convert all table.field selects to just field
+            for idx, sel in enumerate(select):
+                _, field = sel.split('.')
+                select[idx] = field
         # otherwise perform the joins
         else:
             for join_cond in my_query.where_join:
                 # split up join_cond
                 table1, field1, table2, field2 = join_cond
-                # make a copy of the very first join-table
+                # perform the first join
                 if my_query.where_join.index(join_cond) == 0:
                     self.query_table.copy(self.tables[table1])
-                self.query_table = tbl.join(self.query_table, table1+field1, self.tables[table2], field2)
-                # If something went wrong during join, abort query
-                if not self.query_table:
-                    return
+                self.query_table = tbl.join(self.query_table, table1+'.'+field1, self.tables[table2], field2)
+            select = my_query.select
+
         # remove rows that do not fit the given conditions
         for cond in my_query.where_cond:
-            _, field = cond[0].split('.')
             self.query_table.select(cond)
-        # first adjust field names in select-list to field names in table like before
-        select = my_query.select
-        # TODO: Add check for join select or regular select
-        for idx, column in enumerate(select):
-            table, field = column.split('.')
-            # check if 'table.field' is valid. if not, check if just the field is valid
-            if query_table.is_valid_field(column):
-                select[idx] = column
-            else:
-                select[idx] = field
+
         # reduce to only selected columns with adjusted selects-list
         self.query_table.project(select)
+
         # delete duplicates
         self.query_table.reduce()
         # print out the resulting table to the console

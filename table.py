@@ -17,7 +17,7 @@ def is_number(s):
 
 
 # TODO: Add 'In' functionality
-def convert_to_operator(op_string):
+def convert_to_operator(op_string) -> operator:
     """
     Converts a string to an operator
 
