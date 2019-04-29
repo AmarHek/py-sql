@@ -34,6 +34,9 @@ class PySQL(Cmd):
 
     def do_SELECT(self, query):
         """initiates a query"""
+        if not db.tables:
+            print("Database empty, cannot perform query")
+            return
         query = 'SELECT ' + query
         db.perform_query(query)
 

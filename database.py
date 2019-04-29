@@ -63,33 +63,47 @@ class Database:
 
     def perform_query(self, query_string):
         """parses a given query and prints the resulting table to the console
-
         Args:
             query_string: an SQL-query of the form SELECT ... FROM ... WHERE ...
-
-        Returns:
-            Nothing if an error occurs
         """
-
-        if not self.tables:
-            print("Database empty, cannot perform query")
-            return
-        # parse the query
+        # create an empty query
         my_query = qy.Query()
+        # parse the input string to the query and check if there were any errors
         success = my_query.parse(query_string, self.tables)
-        # stop if something is wrong with the query
         if not success:
             return
+        self.answer_query(my_query)
 
+    def answer_query(self, my_query):
+        """builds the final answer table from a given query
+        Args:
+            my_query (Query): Query object with filled attributes
+        """
+        # create a temporary table from join conditions
+        self.build_query_table(my_query)
+        # remove rows that do not fit the given conditions
+        for cond in my_query.where_cond:
+            self.query_table.select(cond)
+        # reduce to only selected columns with adjusted selects-list
+        self.query_table.project(my_query.select)
+        # delete duplicates
+        self.query_table.reduce()
+        # print out the resulting table to the console
+        self.query_table.present()
+
+    def build_query_table(self, my_query):
+        """builds a temporary super-table from join conditions
+        Args:
+            my_query (Query):
+        """
         # if there are no conditions in where_join, just make a copy of the table in my_query.from_
+        # and change field names
         if not my_query.where_join:
-            self.query_table.copy(self.tables[my_query.from_[0]])
-            # since we only select from a pure table, all field names must be un-prefixed
-            select = my_query.select
-            # convert all table.field selects to just field
-            for idx, sel in enumerate(select):
-                _, field = sel.split('.')
-                select[idx] = field
+            requested_table = self.tables[my_query.from_[0]]
+            self.query_table.copy(requested_table)
+            # adjust the field names to convention
+            for i in range(self.query_table.length()):
+                self.query_table.fields[i] = requested_table.name + self.query_table.fields[i]
         # otherwise perform the joins
         else:
             for join_cond in my_query.where_join:
@@ -100,19 +114,6 @@ class Database:
                     self.query_table.copy(tbl.join(self.tables[table1], field1, self.tables[table2], field2))
                 else:
                     self.query_table.copy(tbl.join(self.query_table, table1+'.'+field1, self.tables[table2], field2))
-            select = my_query.select
-
-        # remove rows that do not fit the given conditions
-        for cond in my_query.where_cond:
-            self.query_table.select(cond)
-
-        # reduce to only selected columns with adjusted selects-list
-        self.query_table.project(select)
-
-        # delete duplicates
-        self.query_table.reduce()
-        # print out the resulting table to the console
-        self.query_table.present()
 
     if __name__ == '__main__':
         pass

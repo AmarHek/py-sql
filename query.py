@@ -52,61 +52,44 @@ class Query:
         # convert all to lowercase first
         query_string = query_string.lower()
 
-        # check query syntax
-        if not self.check_syntax(query_string):
+        # check keywords
+        if not self.check_keywords(query_string):
+            print('Keyword Error')
             return False
 
-        # Select is removed from the string and split into two halves at 'From'
-        select, rest = split_and_strip(query_string, 'from')
-        select = select.replace('select', '')
-        select = split_and_strip(select, ',')
-
-        # Fill out from and fill where if conditions are given
-        if 'where' in rest:
-            from_, where = rest.split('where')
-            from_ = split_and_strip(from_, ',')
-            where = split_and_strip(where, 'and')
-        else:
-            from_ = split_and_strip(rest, ',')
-            where = []
-
-        # only fill condition lists if conditions are given in the query
-        if len(where) > 0:
-            for cond in where:
-                # extract operator:
-                operator = ''
-                for op in self.operators:
-                    if op in cond:
-                        operator = op
-                cond = split_and_strip(cond, operator)
-                # join condition if second argument of cond is of form table.field
-                if (len(cond[1].split('.')) == 2) and (operator == '='):
-                    self.where_join.append(cond[0].split('.') + cond[1].split('.'))
-                # otherwise is regular condition and split into table.column, operator and value
-                else:
-                    # check if value for comparison is float and convert
-                    if is_number(cond[1]):
-                        cond[1] = float(cond[1])
-                    self.where_cond.append([cond[0], operator, cond[1]])
-
-        # assign temporaries to attributes
-        self.select = select
-        self.from_ = from_
+        # check query syntax
+        if not self.build_syntax(query_string):
+            print('Syntax Error')
+            return False
 
         if not self.check_database(tables):
+            print('Database Error')
             return False
 
         # reorder join conditions
         if len(self.where_join) > 0:
-            success = self.sort_reorder_join()
-            # if something went from during reordering, abort query
-            if not success:
+            if not self.sort_reorder_join():
+                # if something went from during reordering, abort query
                 return False
+
         return True
 
-    def check_syntax(self, query_string):
+    def check_keywords(self, query_string):
+        # Check if at least one where-condition is given
+        is_where = False
+        for operator in self.operators:
+            if operator in query_string:
+                is_where = True
+        # syntax check and abort if something is wrong
+        # basic typo check
+        if 'select' not in query_string or 'from' not in query_string or (is_where and 'where' not in query_string):
+            print("Syntax error in query, stopping query")
+            return False
+        return True
+
+    def build_syntax(self, query_string):
         """
-        function to check the query syntax
+        function to check the query syntax and fill in the attributes of the query object
 
         Args:
             query_string: the query in question
@@ -114,48 +97,51 @@ class Query:
         Returns:
             bool: False (+ prints error messages) if something went wrong, True if everything is fine
         """
-
-        # Check if at least one where-condition is given
-        is_where = False
-        for operator in self.operators:
-            if operator in query_string:
-                is_where = True
-
-        # syntax check and abort if something is wrong
-        # basic typo check
-        if 'select' not in query_string or 'from' not in query_string or (is_where and 'where' not in query_string):
-            print("Syntax error in query, stopping query")
-            return False
-        else:
-            select, rest = query_string.split('from')
-            select = split_and_strip(select, ',')
-            # check if every select is of form table.field
-            for sel in select:
-                if len(sel.split('.')) != 2:
-                    print('Syntax error in SELECT, stopping query')
+        # Select is removed from the string and split into two halves at 'From'
+        select, rest = split_and_strip(query_string, 'from')
+        select = select.replace('select', '')
+        select = split_and_strip(select, ',')
+        # check if every select is of form table.field
+        for sel in select:
+            if len(sel.split('.')) != 2:
+                print('Syntax error in SELECT, stopping query')
+                return False
+        self.select = select
+        # Fill out from and fill where if conditions are given
+        if 'where' in rest:
+            from_, where = rest.split('where')
+            self.from_ = split_and_strip(from_, ',')
+            where = split_and_strip(where, 'and')
+            # only fill condition lists if conditions are given in the query
+            for cond in where:
+                # extract operator:
+                operator = ''
+                for op in self.operators:
+                    if op in cond:
+                        operator = op
+                if operator == '':
+                    print('Syntax error in conditions, stopping query')
                     return False
-            if is_where:
-                _, where = rest.split('where')
-                where = split_and_strip(where, 'and')
-                for cond in where:
-                    operator = ''
-                    # check if every condition has an operator
-                    for op in self.operators:
-                        if op in cond:
-                            operator = op
-                    if operator == '':
-                        print('Syntax error in conditions, stopping query')
+                cond = split_and_strip(cond, operator)
+                # check if the left-side of a condition is of form table.field
+                if len(cond[0].split('.')) != 2:
+                    print('Syntax error in conditions, stopping query')
+                    return False
+                # join condition if second argument of cond is of form table.field
+                if (len(cond[1].split('.')) == 2) and (operator == '='):
+                    self.where_join.append(cond[0].split('.') + cond[1].split('.'))
+                # otherwise is regular condition and split into table.column, operator and value
+                else:
+                    # check that right-side strings only come with '=' and no other operator
+                    if not is_number(cond[1]) and operator != '=':
+                        print('Cannot use comparison operators with strings')
                         return False
-                    else:
-                        # check if the left-side of a condition is of form table.field
-                        left = cond.split(operator)[0]
-                        if len(left.split('.')) != 2:
-                            print('Syntax error in conditions, stopping query')
-                            return False
-                        # check that right-side strings only come with '=' and no other operator
-                        if not is_number(cond[1]) and operator != '=':
-                            print('Cannot use comparison operators with strings')
-                            return False
+                    # check if value for comparison is float and convert
+                    elif is_number(cond[1]):
+                        cond[1] = float(cond[1])
+                    self.where_cond.append([cond[0], operator, cond[1]])
+        else:
+            self.from_ = split_and_strip(rest, ',')
         return True
 
     def check_database(self, tables):
