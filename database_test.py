@@ -27,7 +27,27 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(len(db.tables.keys()), 2)
 
     def testPerformQuery(self):
+        db = Database()
+        db.add_table('raum', 'raum.csv')
+        db.add_table('belegung', 'belegung.csv')
+        db.add_table('veranstaltung', 'veranstaltung.csv')
+        query = "SELECT belegung.raum, belegung.uhrzeit, raum.gebaeude, raum.groesse, veranstaltung.modul" \
+                "FROM belegung, raum, veranstaltung " \
+                "WHERE belegung.raum = raum.kuerzel" \
+                "AND belegung.semester = veranstaltung.semester" \
+                "AND veranstaltung.modul = swt"
+        fields = ['belegung.raum', 'belegung.uhrzeit', 'raum.gebaeude', 'raum.groesse', 'veranstaltung.modul']
+        data = [['z6_hs4', '10_12', 'z6', 600, 'swt'], ['z6_hs4', '8_10', 'z6', 600, 'swt']]
+        db.perform_query(query)
+        self.assertEqual(db.query_table.name, 'query_table')
+        self.assertListEqual(db.query_table.fields, fields)
+        self.assertListEqual(db.query_table.data, data)
 
+    def testAnswerQuery(self):
+        pass
+
+    def testBuildQueryTable(self):
+        pass
 
 
 if __name__ == "__main__":
