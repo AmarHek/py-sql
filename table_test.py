@@ -1,6 +1,5 @@
 import unittest
 from table import *
-import os
 
 
 class TableTest(unittest.TestCase):
