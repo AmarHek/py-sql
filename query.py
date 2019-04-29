@@ -152,6 +152,10 @@ class Query:
                         if len(left.split('.')) != 2:
                             print('Syntax error in conditions, stopping query')
                             return False
+                        # check that right-side strings only come with '=' and no other operator
+                        if not is_number(cond[1]) and operator != '=':
+                            print('Cannot use comparison operators with strings')
+                            return False
         return True
 
     def check_database(self, tables):
