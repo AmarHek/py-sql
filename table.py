@@ -78,7 +78,8 @@ def join(table1, field1, table2, field2):
     for row, value in enumerate(first_field_as_column):
         # if value is not in second table, add blank spaces as values
         if value not in second_field_as_column:
-            joined.data[row].append([''] * table2.length())
+            for i in range(table2.length()):
+                joined.data[row].append('')
         else:
             # check, where value is the same as in second_field_as_column (= corresponding row in second_table)
             second_table_row = second_field_as_column.index(value)
