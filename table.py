@@ -108,6 +108,10 @@ class Table:
         self.fields = []
         self.data = []
 
+    # Kommentar zur Funktion: Es ist in größeren Projekten üblicher und sinnvoller, solche allgemeinen Funktionen
+    # wie das Laden einer .csv-Datei auf allgemeine Module auszulagern. Da wir es in unserem Programm nur für die
+    # Tabellen an wenigen Stellen nutzen, belassen wir es aber bei dieser Implementierung.
+
     def load_from_csv(self, csv_file, delimiter=';'):
         """
         loads fields and data from a csv-file into a table object
