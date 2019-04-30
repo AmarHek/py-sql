@@ -7,6 +7,7 @@ class DatabaseTest(unittest.TestCase):
 
     def testDatabase(self):
         db = Database()
+        db.clear()
         keys = db.tables.keys()
         self.assertEqual(not keys, True)
         self.assertEqual(db.query_table.name, 'query_table')

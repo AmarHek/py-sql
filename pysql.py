@@ -32,12 +32,12 @@ class PySQL(Cmd):
             for table in tables:
                 db.show_table(table)
 
-    def do_SELECT(self, query):
+    def do_select(self, query):
         """initiates a query"""
         if not db.tables:
             print("Database empty, cannot perform query")
             return
-        query = 'SELECT ' + query
+        query = 'select ' + query
         db.perform_query(query)
 
     def do_tables(self, args):

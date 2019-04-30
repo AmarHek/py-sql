@@ -37,7 +37,7 @@ class Database:
     def clear(self):
         """deletes all existing tables from the database"""
         self.tables = {}
-        self.query_table = tbl.Table('Query Table')
+        self.query_table = tbl.Table('query_table')
 
     # TODO: Add save
     def save_database(self):
@@ -82,9 +82,11 @@ class Database:
         # create a temporary table from join conditions
         self.build_query_table(my_query)
         # remove rows that do not fit the given conditions
+        print(my_query.where_cond, self.query_table.fields)
         for cond in my_query.where_cond:
             self.query_table.select(cond)
         # reduce to only selected columns with adjusted selects-list
+        print(my_query.select, self.query_table.fields)
         self.query_table.project(my_query.select)
         # delete duplicates
         self.query_table.reduce()
@@ -100,10 +102,11 @@ class Database:
         # and change field names
         if not my_query.where_join:
             requested_table = self.tables[my_query.from_[0]]
+            print(requested_table.name)
             self.query_table.copy(requested_table)
             # adjust the field names to convention
             for i in range(self.query_table.length()):
-                self.query_table.fields[i] = requested_table.name + self.query_table.fields[i]
+                self.query_table.fields[i] = requested_table.name + '.' + self.query_table.fields[i]
         # otherwise perform the joins
         else:
             for join_cond in my_query.where_join:
