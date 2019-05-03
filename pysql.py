@@ -52,16 +52,16 @@ class PySQL(Cmd):
         print('Here is a list of possible commands:')
         print('add [file1], [file2], etc.')
         print('\t  - adds a new table to the database from the given file, table name is the same as the filename')
-        print('del [name1], [name2], etc.')
-        print('\t - deletes the specified tables from the database.\n')
+        print('clear')
+        print('\t - deletes all tables from the database.\n')
         print('show [name1], [name2], etc.')
         print('\t - prints the contents of the specified tables\n')
         print('tables')
         print('\t - lists the names of all tables in the database\n')
-        print('SELECT')
+        print('select')
         print('\t - initiates a query: ')
-        print('\t   Select ', '[table1].[column1], [table2].[column2] From [table1], [table2] '
-                              '(Optional) Where [...] And [...] \n')
+        print('\t   select ', '[table1].[column1], [table2].[column2] from [table1], [table2] '
+                              '(Optional) where [...] And [...] \n')
         print('exit')
         print('\t - exits the program.\n')
 

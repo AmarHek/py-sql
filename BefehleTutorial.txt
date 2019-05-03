@@ -1,0 +1,121 @@
+Kleines "Tutorial" zu den Python-Modulen aus der Großübung:
+Punkte mit - sind Eingaben in die Konsole, Punkte mit # sind erklärende Texte
+
+Voraussetzung: 	
+	# Windows Eingabeaufforderung bzw. Terminal starten
+	# in den Ordner mit den Dateien navigieren (über cd + Orderpfad)
+	# Python Konsole starten (über python bzw. python3)			
+	
+table.py:
+	- import table # importieren des Moduls
+	- tbl = table.Table('Tabelle') # erzeugt ein neues Tabellen-Objekt tbl mit Namen 'Tabelle' und leeren Feldern + Daten
+	# Attribute des Objektes in der Konsole anzeigen:
+	- print(tbl.name) 
+	- print(tbl.fields)
+	- print(tbl.data)
+	# da wir in der Konsole sind, kann das print() auch weggelassen werden
+	- tbl.load_from_csv('datei.csv') # lädt die Daten aus der Datei mit Namen 'datei.csv' (gibt es nicht wirklich) in das Objekt tbl
+	# tbl.fields etc. sind jetzt nicht mehr leer 
+	
+	# Restlichen Methoden auf die gleiche Art ausführbar. Man kann z.B. in 'raum.csv' die Zeilen verdoppeln (speichern nicht vergessen)
+	# und diese Datei in ein anderes Tabellenobjekt laden, z.B. raum
+	- raum = table.Table('raum')
+	- raum.load_from_csv('raum.csv')
+	- raum.present() # Nutzt das Modul prettytable, um die Tabelle in schönem Format anzuzeigen
+	- raum.reduice() # Löscht alle identischen Zeilen bis auf die erste
+	- raum.present() # Jetzt wurde jede zusätzliche Zeile mit gleichem Inhalt gelöscht
+	# alternativ kann man statt self.present() auch wieder self.fields und self.data getrennt abrufen
+	
+	# Spalten filtern über self.project(fields_list), Beispiel Tabelle belegung
+	# Liste angeben, welche Spalten übrig bleiben sollen
+	- belegung = table.Table('belegung')
+	- belegung.load_from_csv('belegung.csv')
+	- belegung.present()
+	- felder = ['veranstaltung', 'raum', 'tag', 'uhrzeit']
+	- belegung.project(felder)
+	- belegung.present()
+	# Einzelne Spalten über self.delete_column(field) entfernen
+	- belegung.delete_column('uhrzeit')
+	- belegung.present()
+	
+	# Reihen filtern, die zu einer Bedingung passen, über self.select(cond)
+	# cond ist eine Liste mit Format [Feld, Operator, Bedingung]
+	# Beispiel an Belegung
+	- belegung.load_from_csv('belegung.csv') # damit die Tabelle ihre ursprünglichen Daten erhält
+	- bedingung = ['semester', '=', 'ss_19']
+	- belegung.select(bedingung)
+	- belegung.present()
+	
+	# join-Methode
+	# keine Methode der Klasse Table, sondern im Modul table(.py) enthalten
+	# erhält zwei Tabellenobjekte und Feldnamen, an denen die Tabellen gejoint werden sollen
+	- belegung = table.Table('belegung')
+	- belegung.load_from_csv('belegung.csv')
+	- raum = table.Table('raum')
+	- raum.load_from_csv('raum.csv')
+	- joined = join(belegung, 'raum', raum, 'kuerzel') 
+	# vereinigt die Tabellen belegung und raum am Feld raum von belegung und dem Feld kuerzel von raum
+	- joined.present()
+	
+database.py:
+	# dient dazu, mehrere Tabellen zu verwalten und ruft die Methoden von Tabellenobjekten und des Moduls table.py auf
+	- import database 
+	- db = database.Database()
+	- db.tables # zeigt ein leeres dictionary
+	- db.query_table.present() # zeigt eine leere Anfragentabelle
+	- db.add_table('belegung', 'belegung.csv') # fügt 'belegung' zu tables hinzu und lädt den Inhalt direkt aus belegung.csv
+	- db.add_table('raum', 'raum.csv')
+	- db.show_table('belegung')
+	# auf die gleiche Art können weitere Tabellen hinzugefügt werden 
+	- db.tables['belegung'] # damit lässt sich ein bestimmtes Tabellenobjekt im Dictionary tables abrufen, in dem Fall 'belegung'
+	- belegung = db.tables['belegung']
+	- belegung.present()
+	- db.list_tables() # listet Tabellen in db.tables auf 
+	- anfrage = 'select belegung.veranstaltung, belegung.tag, belegung.uhrzeit from belegung' # eine Anfrage als string formulieren
+	- db.perform_query(anfrage) # die Anfrage durchführen
+	- db.query_table.present() # ist jetzt mit Daten gefüllt
+	- anfrage = 'select belegung.veranstaltung, belegung.tag, belegung.uhrzeit, raum.kuerzel, raum.groesse from belegung, raum where belegung.raum = raum.kuerzel and raum.groesse > 300'
+	- db.perform_query(anfrage)
+	- db.query_table.present()
+	- db.clear() # löscht alle Tabellen 
+	- db.list_tables()
+	
+query.py:
+	# wurde bereits in database benutzt, um die formulieren queries zu verarbeiten
+	- import query 
+	- anfrage = query.Query() # erzeugt eine leere Anfrage 
+	- anfrage.select # .from_, etc. sind leer 
+	# parse: verarbeitet einen Anfrage-String in Kombination mit einer Datenbank (Parameter tables: das Dictionary)
+	# besteht aus mehreren Teilen
+	- anfrage_string = 'select belegung.veranstaltung, raum.kuerzel, from belegung, raum where belegung.raum = raum.kuerzel and raum.groesse > 300'
+	- anfrage.check_keywords(anfrage_string)
+	# Überprüft, ob alle Schlüsselwörter wie select und from vorhanden sind
+	# bei fehlendem Wort oder Schreibfehler kommt eine Fehlermeldung, z.B.
+	- anfrage.check_keyword('selct belegung.veranstaltung frm')
+	
+	- anfrage.build_syntax(anfrage_string) # prüft den string und zerlegt ihn in passendes Format für die Attribute und füllt diese aus 
+	- anfrage.select 
+	- anfrage.from_ 
+	- anfrage.where_join
+	- anfrage.where_cond
+	
+	- anfrage.check_database(db.tables) # hier wird tables aus dem Objekt db aus dem vorigen Abschnitt weitergegeben
+	# vergleicht, ob alle angefragten Tabellen vorhanden sind 
+	# Beispiel für Fehler:
+	- anfrage = query.Query()
+	- anfrage_string = 'select dozent.name from dozent' 
+	- anfrage.check_keywords(anfrage2_string) # alles korrekt
+	- anfrage.build_syntax(anfrage2_string) # immer noch korrekt (gerne die Attribute auflisten)
+	- anfrage.check_database(db.tables) # Fehler: dozent existiert nicht in der Datenbank db 
+	
+	# sort-reorder-join ordnet die join-Anfragen, um sie später der Reihe nach ausführen zu können
+	
+	# alles zusammen wird in self.parse ausgeführt:
+	- anfrage = query.Query()
+	- anfrage_string = 'select belegung.veranstaltung, belegung.tag, belegung.uhrzeit, raum.kuerzel, raum.groesse from belegung, raum where belegung.raum = raum.kuerzel and raum.groesse > 300'
+	- anfrage.parse(anfrage_string, db.tables)
+	# Attribute von anfrage auflisten, sind jetzt gefüllt und geordnet
+	
+pysql.py:
+	# Konsolenoberfläche, um alle bisher gezeigten Methoden einfach ausführen zu können 
+	# help listet alle möglichen Kommandos auf, einfach ein wenig rumprobieren mit dem bisher gezeigten 

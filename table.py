@@ -76,11 +76,10 @@ def join(table1, field1, table2, field2):
     joined.data = copy.deepcopy(table1.data)
     # loop through first_field_as_column (= rows of first table)
     for row, value in enumerate(first_field_as_column):
-        # if value is not in second table, add blank spaces as values
-        if value not in second_field_as_column:
-            for i in range(table2.length()):
-                joined.data[row].append('')
-        else:
+        # omit rows without corresponding value in other table
+        # values must be unique in table2, otherwise only first row with the same value is joined
+        # TODO: Make non-unique rows joinable
+        if value in second_field_as_column:
             # check, where value is the same as in second_field_as_column (= corresponding row in second_table)
             second_table_row = second_field_as_column.index(value)
             # loop through the corresponding row of second table and append values to joined_data
@@ -108,10 +107,9 @@ class Table:
         self.fields = []
         self.data = []
 
-    # Kommentar zur Funktion: Es ist in größeren Projekten üblicher und sinnvoller, solche allgemeinen Funktionen
+    # Kommentar zur load-Funktion: Es ist in größeren Projekten üblicher und sinnvoller, solche allgemeinen Funktionen
     # wie das Laden einer .csv-Datei auf allgemeine Module auszulagern. Da wir es in unserem Programm nur für die
     # Tabellen an wenigen Stellen nutzen, belassen wir es aber bei dieser Implementierung.
-
     def load_from_csv(self, csv_file, delimiter=';'):
         """
         loads fields and data from a csv-file into a table object
@@ -161,7 +159,6 @@ class Table:
         """returns the number of table columns"""
         return len(self.fields)
 
-    # returns the index of a field
     def index(self, field_name):
         """ returns the column number of the given field_name
         Args:
@@ -171,12 +168,10 @@ class Table:
             index = self.fields.index(field_name)
             return index
 
-    # check if a given field name exists in the table
     def is_valid_field(self, field):
         """checks if a table has a given field"""
         return field in self.fields
 
-    # plot the table in terminal
     def present(self):
         """prints the table"""
         pretty = pt.PrettyTable()
@@ -185,7 +180,6 @@ class Table:
             pretty.add_row(line)
         print(pretty)
 
-    # delete all columns of a table specified in fields_list
     def project(self, fields_list):
         """
         selects the specified columns of a table and deletes the others, directly alters the table
