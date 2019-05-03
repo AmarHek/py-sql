@@ -121,6 +121,10 @@ class Table:
             delimiter (str): the symbol used to divide each entry on the csv-file, ';' by default
 
         """
+        # reset previous attributes
+        self.data = []
+        self.fields = []
+
         if os.path.isfile(csv_file):
             with open(csv_file, 'r', encoding="utf-8-sig") as f:
                 for idx, line in enumerate(f):
