@@ -78,6 +78,9 @@ class QueryTest(unittest.TestCase):
                 "and raum.groesse > 300"
         self.assertEqual(myquery.parse(query, data.tables), True)
 
+    def testBuildSyntax2(self):
+
+
 
 if __name__ == "__main__":
     unittest.main()

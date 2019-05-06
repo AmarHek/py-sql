@@ -108,10 +108,35 @@ class Query:
                 print('Syntax error in SELECT, stopping query')
                 return False
         self.select = select
-        # Fill out from and fill where if conditions are given
-        if 'join' in rest:
-            
-        if 'where' in rest:
+
+        # split the rest up depending on keywords
+        if 'join' and 'where' in rest:
+            from_, rest = rest.split('join')
+            join, where = rest.split('where')
+        elif 'join' in rest:
+            from_, join = rest.split('join')
+            where = ''
+        elif 'where' in rest:
+            from_, where = rest.split('where')
+            join = ''
+        else:
+            from_ = rest
+            join = ''
+            where = ''
+
+        self.from_ = split_and_strip(from_, ',')
+
+        if join != '':
+            joins = split_and_strip(join, 'join')
+            for single_join in join:
+                if '=' not in single_join:
+                    print('Missing join operator, stopping query')
+                    return False
+                else:
+                    single_join = split_and_strip(single_join, '=')
+                    if len(single_join[0].split('.')) != 2 or
+
+        elif 'where' in rest:
             from_, where = rest.split('where')
             self.from_ = split_and_strip(from_, ',')
             where = split_and_strip(where, 'and')
@@ -139,7 +164,7 @@ class Query:
                     cond[1] = float(cond[1])
                 self.where_cond.append([cond[0], operator, cond[1]])
         else:
-            self.from_ = split_and_strip(rest, ',')
+
         return True
 
     def check_database(self, tables):
