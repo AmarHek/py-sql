@@ -68,6 +68,13 @@ class PySQL(Cmd):
     def do_exit(self, args):
         raise SystemExit()
 
+    def do_insert(self, args):
+        table, row = args.split('values')
+        table = table.replace('into ', '').strip()
+        row = row.strip('(').strip(')')
+        row = row.split(',')
+        db.insert(table, row)
+
 
 if __name__ == '__main__':
     db = database.Database()

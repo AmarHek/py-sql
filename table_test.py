@@ -25,6 +25,13 @@ class TableTest(unittest.TestCase):
         self.assertListEqual(leer.fields, [])
         self.assertListEqual(leer.data, [])
 
+    def testInsert(self):
+        raum = Table('raum')
+        raum.load_from_csv('raum.csv')
+        row = ['info_turing', 'turing', 500]
+        self.assertTrue(raum.insert(row))
+        self.assertListEqual(raum.data[2], row)
+
 
 if __name__ == "__main__":
     unittest.main()

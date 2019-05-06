@@ -76,13 +76,14 @@ class Query:
 
     def check_keywords(self, query_string):
         # Check if at least one where-condition is given
-        is_where = False
+        is_cond = False
         for operator in self.operators:
             if operator in query_string:
-                is_where = True
+                is_cond = True
         # syntax check and abort if something is wrong
         # basic typo check
-        if 'select' not in query_string or 'from' not in query_string or (is_where and 'where' not in query_string):
+        if 'select' not in query_string or 'from' not in query_string or (is_cond and 'where' not in query_string)\
+                or (is_cond and 'join' and 'on' not in query_string):
             print("Syntax error in query, stopping query")
             return False
         return True
@@ -108,6 +109,8 @@ class Query:
                 return False
         self.select = select
         # Fill out from and fill where if conditions are given
+        if 'join' in rest:
+            
         if 'where' in rest:
             from_, where = rest.split('where')
             self.from_ = split_and_strip(from_, ',')
@@ -127,19 +130,14 @@ class Query:
                 if len(cond[0].split('.')) != 2:
                     print('Syntax error in conditions, stopping query')
                     return False
-                # join condition if second argument of cond is of form table.field
-                if (len(cond[1].split('.')) == 2) and (operator == '='):
-                    self.where_join.append(cond[0].split('.') + cond[1].split('.'))
-                # otherwise is regular condition and split into table.column, operator and value
-                else:
-                    # check that right-side strings only come with '=' and no other operator
-                    if not is_number(cond[1]) and operator != '=':
-                        print('Cannot use comparison operators with strings')
-                        return False
-                    # check if value for comparison is float and convert
-                    elif is_number(cond[1]):
-                        cond[1] = float(cond[1])
-                    self.where_cond.append([cond[0], operator, cond[1]])
+                # check that right-side strings only come with '=' and no other operator
+                if not is_number(cond[1]) and operator != '=':
+                    print('Cannot use comparison operators with strings')
+                    return False
+                # check if value for comparison is float and convert
+                elif is_number(cond[1]):
+                    cond[1] = float(cond[1])
+                self.where_cond.append([cond[0], operator, cond[1]])
         else:
             self.from_ = split_and_strip(rest, ',')
         return True

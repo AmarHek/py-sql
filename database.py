@@ -115,5 +115,17 @@ class Database:
                 else:
                     self.query_table.copy(tbl.join(self.query_table, table1+'.'+field1, self.tables[table2], field2))
 
+    def insert(self, table, row):
+        # parsing kann theoretisch auch hier passieren, statt in pysql
+        if table in self.tables.keys():
+            success = self.tables[table].insert(row)
+            if success:
+                return True
+            else:
+                return False
+        else:
+            print("Table '{}' does not exist.".format(table))
+            return True
+
     if __name__ == '__main__':
         pass

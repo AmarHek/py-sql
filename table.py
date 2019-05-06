@@ -240,3 +240,16 @@ class Table:
         # running backwards to avoid index confusion
         for row_index in junk_row_index[::-1]:
             del self.data[row_index]
+
+    def insert(self, row):
+        # optional: self.reduce() am Ende oder check, ob row nicht schon in der Tabelle ist
+        if len(row) == self.length():
+            # convert to floats:
+            for i in range(len(row)):
+                if is_number(row[i]):
+                    row[i] = float(row[i])
+            self.data.append(row)
+            return True
+        else:
+            print("Length of the row does not match table length!")
+            return False

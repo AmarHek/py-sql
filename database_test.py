@@ -44,11 +44,12 @@ class DatabaseTest(unittest.TestCase):
         self.assertListEqual(db.query_table.fields, fields)
         self.assertListEqual(db.query_table.data, data)
 
-    def testAnswerQuery(self):
-        pass
-
-    def testBuildQueryTable(self):
-        pass
+    def testInsert(self):
+        db = Database()
+        db.add_table('raum', 'raum.csv')
+        row = ['info_turing', 'turing', 500]
+        self.assertTrue(db.insert('raum', row))
+        self.assertListEqual(db.tables['raum'].data[2], row)
 
 
 if __name__ == "__main__":
