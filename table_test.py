@@ -36,7 +36,7 @@ class TableTest(unittest.TestCase):
         self.assertFalse(raum.insert(row))
         row = ['info_turing', 'turing', 500]
         self.assertTrue(raum.insert(row))
-        self.assertListEqual(raum.data[2], row)
+        self.assertListEqual(raum.data[-1], row)
         self.assertEqual(len(raum.data), len(raum2.data)+1)
         self.assertListEqual(raum2.data, raum.data[:-1])
         row = ['info_zuse', 'zuse', '500']
