@@ -49,6 +49,8 @@ class Query:
             bool: False if the query fails due to an error
         """
 
+        print('New query version')
+
         # convert all to lowercase first
         query_string = query_string.lower()
 
@@ -98,6 +100,7 @@ class Query:
         Returns:
             bool: False (+ prints error messages) if something went wrong, True if everything is fine
         """
+
         # Select is removed from the string and split into two halves at 'From'
         select, rest = split_and_strip(query_string, 'from')
         select = select.replace('select', '')
