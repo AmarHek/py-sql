@@ -112,33 +112,51 @@ class Query:
         # split the rest up depending on keywords
         if 'join' and 'where' in rest:
             from_, rest = rest.split('join')
-            join, where = rest.split('where')
+            joins, where = rest.split('where')
         elif 'join' in rest:
             from_, join = rest.split('join')
             where = ''
         elif 'where' in rest:
             from_, where = rest.split('where')
-            join = ''
+            joins = ''
         else:
             from_ = rest
-            join = ''
+            joins = ''
             where = ''
 
+        # fill up from-list
         self.from_ = split_and_strip(from_, ',')
 
-        if join != '':
-            joins = split_and_strip(join, 'join')
-            for single_join in join:
-                if '=' not in single_join:
-                    print('Missing join operator, stopping query')
+        # fill up join conditions of not empty
+        if joins != '':
+            joins = split_and_strip(joins, 'join')
+            for join in joins:
+                if (len(join.split('on')) != 2) or (len(join.split('=')) != 2):
+                    print('Wrong number of join operator(s), stopping query')
                     return False
                 else:
-                    single_join = split_and_strip(single_join, '=')
-                    if len(single_join[0].split('.')) != 2 or
+                    # separate table name and actual join condition
+                    table, join = split_and_strip(join, 'on')
+                    # separate into first and second table.column
+                    join = split_and_strip(join, '=')
+                    # check if both conditions are of form table.column
+                    if (len(join[0].split('.')) != 2) or (len(join[1].split('.')) != 2):
+                        print('Syntax error in join conditions, stopping query')
+                        return False
+                    else:
+                        # create list of join condition with order depending on called table
+                        if table in join[0]:
+                            join_cond = [join[0].split('.') + join[1].split('.')]
+                            self.where_join.append(join_cond)
+                        elif table in join[1]:
+                            join_cond = [join[1].split('.') + join[0].split('.')]
+                            self.where_join.append(join_cond)
+                        else:
+                            print('Table name and join condition do not match.')
+                            return False
 
-        elif 'where' in rest:
-            from_, where = rest.split('where')
-            self.from_ = split_and_strip(from_, ',')
+        # fill up where conditions if not empty
+        if where != '':
             where = split_and_strip(where, 'and')
             # only fill condition lists if conditions are given in the query
             for cond in where:
@@ -163,7 +181,6 @@ class Query:
                 elif is_number(cond[1]):
                     cond[1] = float(cond[1])
                 self.where_cond.append([cond[0], operator, cond[1]])
-        else:
 
         return True
 
