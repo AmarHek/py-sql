@@ -6,7 +6,11 @@ import copy
 
 def is_number(s):
     """checks if a string can be converted to float"""
-    if '_' in s:
+    if type(s) == int:
+        return float(s)
+    elif type(s) == float:
+        return s
+    elif '_' in s:
         return False
     else:
         try:
