@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from table import *
 
 
@@ -37,7 +38,9 @@ class TableTest(unittest.TestCase):
         row = ['info_turing', 'turing', 500]
         self.assertTrue(raum.insert(row))
         self.assertListEqual(raum.data[-1], row)
-        self.assertEqual(len(raum.data), len(raum2.data)+1)
+        old_shape = list(np.shape(raum2.data))
+        old_shape[0] += 1
+        self.assertEqual(list(np.shape(raum.data)), old_shape)
         self.assertListEqual(raum2.data, raum.data[:-1])
         row = ['info_zuse', 'zuse', '500']
         self.assertTrue(raum.insert(row))
