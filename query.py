@@ -107,10 +107,18 @@ class Query:
                 print('Syntax error in SELECT, stopping query')
                 return False
         self.select = select
-        # Fill out from and fill where if conditions are given
+
+        # split the rest up depending on keywords
         if 'where' in rest:
             from_, where = rest.split('where')
-            self.from_ = split_and_strip(from_, ',')
+        else:
+            from_ = rest
+            where = ''
+
+        self.from_ = split_and_strip(from_, ',')
+
+        # Fill out from and fill where if conditions are given
+        if 'where' != '':
             where = split_and_strip(where, 'and')
             # only fill condition lists if conditions are given in the query
             for cond in where:
@@ -140,8 +148,7 @@ class Query:
                     elif is_number(cond[1]):
                         cond[1] = float(cond[1])
                     self.where_cond.append([cond[0], operator, cond[1]])
-        else:
-            self.from_ = split_and_strip(rest, ',')
+
         return True
 
     def check_database(self, tables):
