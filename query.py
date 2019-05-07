@@ -49,8 +49,6 @@ class Query:
             bool: False if the query fails due to an error
         """
 
-        print('New query version')
-
         # convert all to lowercase first
         query_string = query_string.lower()
 
@@ -84,8 +82,8 @@ class Query:
                 is_cond = True
         # syntax check and abort if something is wrong
         # basic typo check
-        if 'select' not in query_string or 'from' not in query_string or (is_cond and 'where' not in query_string)\
-                or (is_cond and 'join' and 'on' not in query_string):
+        if 'select' not in query_string or 'from' not in query_string or \
+                (is_cond and (('join' not in query_string or 'on' not in query_string) and 'where' not in query_string)):
             print("Syntax error in query, stopping query")
             return False
         return True

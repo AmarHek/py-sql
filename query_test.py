@@ -18,7 +18,7 @@ class QueryTest(unittest.TestCase):
         myquery = Query()
         query = "select table1.field1 from table1"
         self.assertEqual(myquery.check_keywords(query), True)
-        query = "select table1.field1 from table1 where table1.field1 < 10"
+        query = "select table1.field1 from table1 where table1.field1 = 10"
         self.assertEqual(myquery.check_keywords(query), True)
         query = 'select table1.field1 from table1 whr table1.field1 < 10'
         self.assertEqual(myquery.check_keywords(query), False)
@@ -28,6 +28,11 @@ class QueryTest(unittest.TestCase):
         self.assertEqual(myquery.check_keywords(query), False)
         query = 'slct table1.field1 from table1 table1.field1 < 10'
         self.assertEqual(myquery.check_keywords(query), False)
+        query = 'select table1.field1, table2.field2 from table1, table2 join table1 on table1.field1 = table2.field2'
+        self.assertEqual(myquery.check_keywords(query), True)
+        query = 'select table1.field1, table2.field2 from table1, table2 join table1 on table1.field1 = table2.field2' \
+                'where table1.field1 > 2'
+        self.assertEqual(myquery.check_keywords(query), True)
 
     def testCheckDatabase(self):
         myquery = Query()
