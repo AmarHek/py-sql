@@ -6,7 +6,11 @@ import copy
 
 def is_number(s):
     """checks if a string can be converted to float"""
-    if '_' in s:
+    if type(s) == int:
+        return float(s)
+    elif type(s) == float:
+        return s
+    elif '_' in s:
         return False
     else:
         try:
@@ -243,13 +247,20 @@ class Table:
 
     def insert(self, row):
         # optional: self.reduce() am Ende oder check, ob row nicht schon in der Tabelle ist
-        if len(row) == self.length():
+        if len(row) != self.length():
+            print("Length of the row does not match table length!")
+            return False
+        else:
             # convert to floats:
             for i in range(len(row)):
                 if is_number(row[i]):
                     row[i] = float(row[i])
+            # check if data types are the same
+            types_new = [type(a) for a in row]
+            types_old = [type(a) for a in self.data[0]]
+            if types_new != types_old:
+                print("Data types of new row do not match old ones")
+                return False
+            # append the data
             self.data.append(row)
             return True
-        else:
-            print("Length of the row does not match table length!")
-            return False
