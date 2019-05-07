@@ -29,26 +29,6 @@ class QueryTest(unittest.TestCase):
         query = 'slct table1.field1 from table1 table1.field1 < 10'
         self.assertEqual(myquery.check_keywords(query), False)
 
-    def testBuildSyntax(self):
-        myquery = Query()
-        query = "select table1, table2.field2 from table1, table2"
-        self.assertEqual(myquery.build_syntax(query), False)
-        query = "select table1.field1, table2.field2 from table1, table2" \
-                "where table1 = 300"
-        self.assertEqual(myquery.build_syntax(query), False)
-        query = "select table1.field1, table2.field2 from table1, table2 where table1.field1 < jung"
-        self.assertEqual(myquery.build_syntax(query), False)
-        query = "select table1.field1, table2.field2 " \
-                "from table1, table2 " \
-                "where table1.field1 = table2.field2" \
-                "and table1.field1 = z6" \
-                "and table2.field2 < 10"
-        self.assertEqual(myquery.build_syntax(query), True)
-        self.assertListEqual(myquery.select, ['table1.field1', 'table2.field2'])
-        self.assertListEqual(myquery.from_, ['table1', 'table2'])
-        self.assertListEqual(myquery.where_cond, [['table1.field1', '=', 'z6'], ['table2.field2', '<', 10]])
-        self.assertListEqual(myquery.where_join, [['table1', 'field1', 'table2', 'field2']])
-
     def testCheckDatabase(self):
         myquery = Query()
         data = db.Database()
@@ -78,8 +58,53 @@ class QueryTest(unittest.TestCase):
                 "and raum.groesse > 300"
         self.assertEqual(myquery.parse(query, data.tables), True)
 
-    def testBuildSyntax2(self):
+    def testBuildSyntax(self):
+        myquery = Query()
+        query = "select table1, table2.field2 from table1, table2"
+        self.assertEqual(myquery.build_syntax(query), False)
+        query = "select table1.field1, table2.field2 from table1, table2" \
+                "where table1 = 300"
+        self.assertEqual(myquery.build_syntax(query), False)
+        query = "select table1.field1, table2.field2 from table1, table2 where table1.field1 < jung"
+        self.assertEqual(myquery.build_syntax(query), False)
 
+        query = "select table1.field1, table2.field2, table3.field3 " \
+                "from table1, table2, table3 " \
+                "join table1 on table1.field1 = table2.field2" \
+                "join table2 on table3.field3 = table2.field2" \
+                "where table1.field1 = z6" \
+                "and table2.field2 < 10" \
+                "and table3.field3 = 50"
+        self.assertEqual(myquery.build_syntax(query), True)
+        self.assertListEqual(myquery.select, ['table1.field1', 'table2.field2', 'table3.field3'])
+        self.assertListEqual(myquery.from_, ['table1', 'table2', 'table3'])
+        self.assertListEqual(myquery.where_cond, [['table1.field1', '=', 'z6'], ['table2.field2', '<', 10],
+                                                  ['table3.field3', '=', 50]])
+        self.assertListEqual(myquery.where_join, [['table1', 'field1', 'table2', 'field2'],
+                                                  ['table2', 'field2', 'table3', 'field3']])
+
+        myquery = Query()
+        query = "select table1.field1, table2.field2, table3.field3 " \
+                "from table1, table2, table3 " \
+                "join table1 on table1.field1 = table2.field2" \
+                "join table2 on table3.field3 = table2.field2"
+        self.assertEqual(myquery.build_syntax(query), True)
+        self.assertListEqual(myquery.select, ['table1.field1', 'table2.field2', 'table3.field3'])
+        self.assertListEqual(myquery.from_, ['table1', 'table2', 'table3'])
+        self.assertListEqual(myquery.where_join, [['table1', 'field1', 'table2', 'field2'],
+                                                  ['table2', 'field2', 'table3', 'field3']])
+
+        myquery = Query()
+        query = "select table1.field1, table2.field2, table3.field3 " \
+                "from table1, table2, table3 " \
+                "where table1.field1 = z6" \
+                "and table2.field2 < 10" \
+                "and table3.field3 = 50"
+        self.assertEqual(myquery.build_syntax(query), True)
+        self.assertListEqual(myquery.select, ['table1.field1', 'table2.field2', 'table3.field3'])
+        self.assertListEqual(myquery.from_, ['table1', 'table2', 'table3'])
+        self.assertListEqual(myquery.where_cond, [['table1.field1', '=', 'z6'], ['table2.field2', '<', 10],
+                                                  ['table3.field3', '=', 50]])
 
 
 if __name__ == "__main__":

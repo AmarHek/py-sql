@@ -110,11 +110,15 @@ class Query:
         self.select = select
 
         # split the rest up depending on keywords
-        if 'join' and 'where' in rest:
-            from_, rest = rest.split('join')
-            joins, where = rest.split('where')
+        if 'join' in rest and 'where' in rest:
+            rest, where = split_and_strip(rest, 'where')
+            rest = split_and_strip(rest, 'join')
+            from_ = rest[0]
+            joins = rest[1:]
         elif 'join' in rest:
-            from_, join = rest.split('join')
+            rest = split_and_strip(rest, 'join')
+            from_ = rest[0]
+            joins = rest[1:]
             where = ''
         elif 'where' in rest:
             from_, where = rest.split('where')
@@ -129,7 +133,6 @@ class Query:
 
         # fill up join conditions of not empty
         if joins != '':
-            joins = split_and_strip(joins, 'join')
             for join in joins:
                 if (len(join.split('on')) != 2) or (len(join.split('=')) != 2):
                     print('Wrong number of join operator(s), stopping query')
@@ -146,10 +149,10 @@ class Query:
                     else:
                         # create list of join condition with order depending on called table
                         if table in join[0]:
-                            join_cond = [join[0].split('.') + join[1].split('.')]
+                            join_cond = join[0].split('.') + join[1].split('.')
                             self.where_join.append(join_cond)
                         elif table in join[1]:
-                            join_cond = [join[1].split('.') + join[0].split('.')]
+                            join_cond = join[1].split('.') + join[0].split('.')
                             self.where_join.append(join_cond)
                         else:
                             print('Table name and join condition do not match.')
