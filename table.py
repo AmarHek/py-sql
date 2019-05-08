@@ -6,18 +6,11 @@ import copy
 
 def is_number(s):
     """checks if a string can be converted to float"""
-    if type(s) == int:
-        return float(s)
-    elif type(s) == float:
-        return s
-    elif '_' in s:
+    try:
+        float(s)
+        return True
+    except ValueError:
         return False
-    else:
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
 
 
 # TODO: Add 'In' functionality
