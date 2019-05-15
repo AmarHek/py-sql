@@ -226,13 +226,13 @@ class Query:
         # check the join conditions
         if len(self.where_join) > 0:
             for cond in self.where_join:
-                if cond[0] not in self.from_:
-                    print("Table '{}' found in conditions, but not in from.".format(cond[0]))
-                    return False
-                elif cond[2] not in self.from_:
-                    print("Table '{}' found in conditions, but not in from.".format(cond[2]))
-                    return False
-                elif not tables[cond[0]].is_valid_field(cond[1]):
+                #if cond[0] not in self.from_:
+                #    print("Table '{}' found in conditions, but not in from.".format(cond[0]))
+                #    return False
+                #elif cond[2] not in self.from_:
+                #    print("Table '{}' found in conditions, but not in from.".format(cond[2]))
+                #    return False
+                if not tables[cond[0]].is_valid_field(cond[1]):
                     print("Table '{}' does not have the field '{}'.".format(cond[0], cond[1]))
                     return False
                 elif not tables[cond[2]].is_valid_field(cond[3]):
